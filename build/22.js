@@ -75,6 +75,9 @@ var CoreSettingsGeneralPageModule = /** @class */ (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__providers_utils_dom__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__providers_local_notifications__ = __webpack_require__(82);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__configconstants__ = __webpack_require__(75);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__providers_sites__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__providers_utils_text__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__providers_logger__ = __webpack_require__(6);
 // (C) Copyright 2015 Martin Dougiamas
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -107,18 +110,25 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
+
+
 /**
  * Page that displays the general settings.
  */
 var CoreSettingsGeneralPage = /** @class */ (function () {
-    function CoreSettingsGeneralPage(appProvider, configProvider, fileProvider, eventsProvider, langProvider, domUtils, localNotificationsProvider) {
+    function CoreSettingsGeneralPage(appProvider, configProvider, fileProvider, eventsProvider, sitesProvider, langProvider, domUtils, textUtils, logger, localNotificationsProvider) {
         var _this = this;
+        this.appProvider = appProvider;
         this.configProvider = configProvider;
         this.eventsProvider = eventsProvider;
+        this.sitesProvider = sitesProvider;
         this.langProvider = langProvider;
         this.domUtils = domUtils;
+        this.textUtils = textUtils;
         this.languages = {};
         this.languageCodes = [];
+        this.logger = logger.getInstance('CoreSettingsGeneralPage');
         this.languages = __WEBPACK_IMPORTED_MODULE_9__configconstants__["a" /* CoreConfigConstants */].languages;
         this.languageCodes = Object.keys(this.languages);
         langProvider.getCurrentLanguage().then(function (currentLanguage) {
@@ -139,9 +149,18 @@ var CoreSettingsGeneralPage = /** @class */ (function () {
      */
     CoreSettingsGeneralPage.prototype.languageChanged = function () {
         var _this = this;
+        this.logger.log("LANG = " + this.selectedLanguage);
+        var params = {
+            lang: this.selectedLanguage
+        };
+        this.sitesProvider.getSite(this.sitesProvider.getCurrentSiteId()).then(function (site) {
+            site.read('local_integrity_matters_service_change_lang', params, {});
+            site.deleteFolder();
+        });
         this.langProvider.changeCurrentLanguage(this.selectedLanguage).finally(function () {
             _this.eventsProvider.trigger(__WEBPACK_IMPORTED_MODULE_5__providers_events__["a" /* CoreEventsProvider */].LANGUAGE_CHANGED);
         });
+        this.appProvider.getRootNavController().setRoot('CoreMainMenuPage');
     };
     /**
      * Called when the rich text editor is enabled or disabled.
@@ -161,8 +180,8 @@ var CoreSettingsGeneralPage = /** @class */ (function () {
             selector: 'page-core-settings-general',template:/*ion-inline-start:"D:\Projects\moodlemobile2\src\core\settings\pages\general\general.html"*/'<ion-header>\n    <ion-navbar core-back-button>\n        <ion-title>{{ \'core.settings.general\' | translate }}</ion-title>\n    </ion-navbar>\n</ion-header>\n<ion-content>\n    <ion-item text-wrap>\n        <ion-label><h2>{{ \'core.settings.language\' | translate }}</h2></ion-label>\n        <ion-select [(ngModel)]="selectedLanguage" (ngModelChange)="languageChanged()" interface="action-sheet">\n            <ion-option *ngFor="let code of languageCodes" [value]="code">{{ languages[code] }}</ion-option>\n        </ion-select>\n    </ion-item>\n    <ion-item text-wrap *ngIf="rteSupported">\n        <ion-label>\n            <h2>{{ \'core.settings.enablerichtexteditor\' | translate }}</h2>\n            <p>{{ \'core.settings.enablerichtexteditordescription\' | translate }}</p>\n        </ion-label>\n        <ion-toggle [(ngModel)]="richTextEditor" (ngModelChange)="richTextEditorChanged()"></ion-toggle>\n    </ion-item>\n    <ion-item text-wrap>\n        <ion-label>\n            <h2>{{ \'core.settings.debugdisplay\' | translate }}</h2>\n            <p>{{ \'core.settings.debugdisplaydescription\' | translate }}</p>\n        </ion-label>\n        <ion-toggle [(ngModel)]="debugDisplay" (ngModelChange)="debugDisplayChanged()"></ion-toggle>\n    </ion-item>\n</ion-content>\n'/*ion-inline-end:"D:\Projects\moodlemobile2\src\core\settings\pages\general\general.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__providers_app__["a" /* CoreAppProvider */], __WEBPACK_IMPORTED_MODULE_3__providers_config__["a" /* CoreConfigProvider */], __WEBPACK_IMPORTED_MODULE_4__providers_file__["a" /* CoreFileProvider */],
-            __WEBPACK_IMPORTED_MODULE_5__providers_events__["a" /* CoreEventsProvider */], __WEBPACK_IMPORTED_MODULE_6__providers_lang__["a" /* CoreLangProvider */],
-            __WEBPACK_IMPORTED_MODULE_7__providers_utils_dom__["a" /* CoreDomUtilsProvider */],
+            __WEBPACK_IMPORTED_MODULE_5__providers_events__["a" /* CoreEventsProvider */], __WEBPACK_IMPORTED_MODULE_10__providers_sites__["a" /* CoreSitesProvider */], __WEBPACK_IMPORTED_MODULE_6__providers_lang__["a" /* CoreLangProvider */],
+            __WEBPACK_IMPORTED_MODULE_7__providers_utils_dom__["a" /* CoreDomUtilsProvider */], __WEBPACK_IMPORTED_MODULE_11__providers_utils_text__["a" /* CoreTextUtilsProvider */], __WEBPACK_IMPORTED_MODULE_12__providers_logger__["a" /* CoreLoggerProvider */],
             __WEBPACK_IMPORTED_MODULE_8__providers_local_notifications__["a" /* CoreLocalNotificationsProvider */]])
     ], CoreSettingsGeneralPage);
     return CoreSettingsGeneralPage;
